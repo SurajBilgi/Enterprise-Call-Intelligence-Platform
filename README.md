@@ -862,10 +862,10 @@ MIT License - See LICENSE file for details
 
 ## 📞 Contact & Questions
 
-Built by: [Your Name]
-Portfolio: [Your Portfolio URL]
-LinkedIn: [Your LinkedIn]
-GitHub: [Your GitHub]
+- Built by: Suraj S Bilgi
+- Portfolio: [My Portfolio](https://surajbilgi-web.vercel.app/)
+- LinkedIn: [LinkedIn](https://www.linkedin.com/in/surajbilgi)
+- GitHub: [GitHub](https://github.com/SurajBilgi)
 
 **Questions?** Open an issue or contact me directly.
 
