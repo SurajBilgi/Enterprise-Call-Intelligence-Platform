@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  # API Service
+  api:
+    build: .
+    container_name: call-intelligence-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./storage:/app/storage
+      - ./logs:/app/logs
+      - ./config:/app/config
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - APP_ENV=production
+    command: python -m api.main
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  
+  # UI Service
+  ui:
+    build: .
+    container_name: call-intelligence-ui
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./storage:/app/storage
+      - ./logs:/app/logs
+      - ./config:/app/config
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - APP_ENV=production
+    command: streamlit run ui/streamlit_app.py --server.port 8501 --server.address 0.0.0.0
+    restart: unless-stopped
+    depends_on:
+      - api
+
+volumes:
+  storage:
+  logs:

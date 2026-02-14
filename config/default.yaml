@@ -1,0 +1,185 @@
+# Enterprise Call Intelligence Platform - Configuration
+# =======================================================
+
+# Application Settings
+app:
+  name: "Enterprise Call Intelligence Platform"
+  version: "1.0.0"
+  environment: "development"
+  debug: true
+
+# Storage Configuration
+storage:
+  raw_transcripts_path: "storage/raw_transcripts"
+  structured_db_path: "storage/structured/calls.db"
+  vector_store_path: "storage/vectors"
+  cache_path: "storage/cache"
+  keyword_index_path: "storage/search/keyword_index.pkl"
+
+# Service Configuration
+services:
+  ingestion:
+    batch_size: 100
+    enable_parallel: true
+    
+  preprocessing:
+    # IMPORTANCE SCORING THRESHOLDS - Key to identifying important calls
+    # This is where we decide which calls/segments need deep analysis
+    importance_thresholds:
+      high_priority: 0.7  # Complaints, critical issues
+      medium_priority: 0.4  # Questions, inquiries
+      low_priority: 0.2  # General conversation
+    
+    # Enable cheap NLP triage before LLM
+    enable_triage: true
+    
+    # Keyword spotting for importance
+    high_priority_keywords:
+      - "complaint"
+      - "refund"
+      - "cancel"
+      - "terrible"
+      - "awful"
+      - "fraud"
+      - "dispute"
+      - "lawsuit"
+      - "error"
+      - "bug"
+      - "broken"
+      - "not working"
+    
+    medium_priority_keywords:
+      - "question"
+      - "how to"
+      - "need help"
+      - "issue"
+      - "problem"
+      - "confused"
+      
+  enrichment:
+    # COST OPTIMIZATION - Only enrich important segments
+    # For millions of calls, this is critical
+    enable_selective_enrichment: true
+    enrich_threshold: 0.4  # Only enrich calls scoring above this
+    
+    # Model selection for cost control
+    use_cheap_model_for_triage: true
+    cheap_model: "gpt-3.5-turbo"
+    expensive_model: "gpt-4-turbo-preview"
+    
+    max_segment_length: 2000  # Tokens
+    batch_size: 10
+    
+  indexing:
+    embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
+    embedding_dimension: 384
+    chunk_size: 500
+    chunk_overlap: 50
+    enable_keyword_index: true
+    
+  analytics:
+    # Precompute aggregations for fast queries
+    enable_precomputation: true
+    aggregation_window_days: [1, 7, 30, 90]
+    top_n_categories: 20
+    
+  rag:
+    retrieval_top_k: 10
+    rerank_top_k: 5
+    enable_hybrid_search: true
+    bm25_weight: 0.3
+    vector_weight: 0.7
+    
+    # Context management
+    max_context_tokens: 4000
+    enable_context_compression: true
+    
+  query_router:
+    # Classify queries into different processing paths
+    classification_threshold: 0.6
+    enable_caching: true
+    cache_ttl_seconds: 3600
+
+# LLM Configuration
+llm:
+  provider: "openai"
+  api_key_env: "OPENAI_API_KEY"
+  
+  models:
+    cheap:
+      name: "gpt-3.5-turbo"
+      cost_per_1k_tokens: 0.0015  # Input
+      cost_per_1k_output_tokens: 0.002
+      max_tokens: 4096
+      
+    expensive:
+      name: "gpt-4-turbo-preview"
+      cost_per_1k_tokens: 0.01
+      cost_per_1k_output_tokens: 0.03
+      max_tokens: 8192
+      
+  embeddings:
+    model: "text-embedding-3-small"
+    cost_per_1k_tokens: 0.00002
+    dimensions: 1536
+
+# Observability
+observability:
+  enable_logging: true
+  log_level: "INFO"
+  log_path: "logs"
+  
+  enable_metrics: true
+  metrics_port: 9090
+  
+  enable_tracing: true
+  trace_all_llm_calls: true
+  
+  # Cost tracking
+  enable_cost_tracking: true
+  cost_alert_threshold_per_query: 0.10
+  
+  # Governance
+  enable_pii_detection: true
+  enable_confidence_scoring: true
+
+# Query Processing Modes
+query_modes:
+  cheap:
+    name: "Analytics Only"
+    enable_llm: false
+    enable_rag: false
+    enable_analytics: true
+    
+  balanced:
+    name: "Balanced"
+    enable_llm: true
+    use_cheap_model: true
+    enable_rag: true
+    enable_analytics: true
+    
+  deep:
+    name: "Deep Insight"
+    enable_llm: true
+    use_cheap_model: false
+    enable_rag: true
+    enable_analytics: true
+    retrieval_top_k: 15
+
+# API Configuration
+api:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 4
+  enable_cors: true
+  cors_origins:
+    - "http://localhost:3000"
+    - "http://localhost:8501"
+
+# UI Configuration
+ui:
+  streamlit_port: 8501
+  default_query_mode: "balanced"
+  show_cost_estimates: true
+  show_confidence_scores: true
+  enable_analytics_dashboard: true
